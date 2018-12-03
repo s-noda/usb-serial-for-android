@@ -3,12 +3,12 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1"
+    compileSdkVersion 26
+    buildToolsVersion '28.0.2'
 
     defaultConfig {
         minSdkVersion 12
-        targetSdkVersion 19
+        targetSdkVersion 26
     }
 
     buildTypes {
@@ -28,10 +28,10 @@ configurations {
     }
 }
 
-signing {
-    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
+//signing {
+//    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+//    sign configurations.archives
+//}
 
 def getRepositoryUsername() {
     return hasProperty('sonatypeUsername') ? sonatypeUsername : ""
@@ -45,55 +45,67 @@ def isReleaseBuild() {
     return version.contains("SNAPSHOT") == false
 }
 
-uploadArchives {
-    def sonatypeRepositoryUrl
-    if (isReleaseBuild()) {
-        println 'RELEASE BUILD'
-        sonatypeRepositoryUrl = hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
-                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-    } else {
-        println 'SNAPSHOT BUILD'
-        sonatypeRepositoryUrl = hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
-                : "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
+//uploadArchives {
+//    def sonatypeRepositoryUrl
+//    if (isReleaseBuild()) {
+//        println 'RELEASE BUILD'
+//        sonatypeRepositoryUrl = hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+//                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+//    } else {
+//        println 'SNAPSHOT BUILD'
+//        sonatypeRepositoryUrl = hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+//                : "https://oss.sonatype.org/content/repositories/snapshots/"
+//    }
+//
+//    configuration = configurations.archives
+//    repositories.mavenDeployer {
+//        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+//
+//        repository(url: sonatypeRepositoryUrl) {
+//            authentication(userName: getRepositoryUsername(),
+//                    password: getRepositoryPassword())
+//        }
+//
+//        pom.artifactId = 'usb-serial-for-android'
+//        pom.project {
+//            name 'usb-serial-for-android'
+//            packaging 'aar'
+//            description 'USB Serial Driver Library for Android'
+//            url 'https://github.com/mik3y/usb-serial-for-android'
+//
+//            scm {
+//                url 'scm:git@github.com:mik3y/usb-serial-for-android.git'
+//                connection 'scm:git@github.com:mik3y/usb-serial-for-android.git'
+//                developerConnection 'scm:git@github.com:mik3y/usb-serial-for-android.git'
+//            }
+//
+//            licenses {
+//                license {
+//                    name 'GNU LGPL v2.1'
+//                    url 'http://www.gnu.org/licenses/lgpl-2.1.txt'
+//                    distribution 'repo'
+//                }
+//            }
+//
+//            developers {
+//                developer {
+//                    id 'mik3y'
+//                    name 'mik3y'
+//                    email 'opensource@hoho.com'
+//                }
+//            }
+//        }
+//    }
+//}
 
-    configuration = configurations.archives
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        repository(url: sonatypeRepositoryUrl) {
-            authentication(userName: getRepositoryUsername(),
-                    password: getRepositoryPassword())
-        }
-
-        pom.artifactId = 'usb-serial-for-android'
-        pom.project {
-            name 'usb-serial-for-android'
-            packaging 'aar'
-            description 'USB Serial Driver Library for Android'
-            url 'https://github.com/mik3y/usb-serial-for-android'
-
-            scm {
-                url 'scm:git@github.com:mik3y/usb-serial-for-android.git'
-                connection 'scm:git@github.com:mik3y/usb-serial-for-android.git'
-                developerConnection 'scm:git@github.com:mik3y/usb-serial-for-android.git'
-            }
-
-            licenses {
-                license {
-                    name 'GNU LGPL v2.1'
-                    url 'http://www.gnu.org/licenses/lgpl-2.1.txt'
-                    distribution 'repo'
-                }
-            }
-
-            developers {
-                developer {
-                    id 'mik3y'
-                    name 'mik3y'
-                    email 'opensource@hoho.com'
-                }
-            }
-        }
-    }
+def JAR_NAME='usbSerialForAndroidLibrary.jar'
+task clearJar(type: Delete) {
+    delete 'build/libs/' + JAR_NAME
 }
+task makeJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into('release/')
+    include('classes.jar')
+    rename('classes.jar', JAR_NAME)
+}
+makeJar.dependsOn(clearJar, build)
